@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منوچ — افزودن کالا</title>
+<meta name="description" content="صفحه افزودن کالا — بازسازی از فیگما (Node 81:4342)">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{font-family:'Ravi','Vazirmatn',Tahoma,sans-serif;color:#16161D;-webkit-font-smoothing:antialiased;background:#EFF0F6;}
+  button{font:inherit;border:0;background:none;cursor:pointer;color:inherit;}
+  img{display:block;}
+  select,input{font-family:inherit;}
+
+  .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:56px;padding:40px 24px;
+    background:radial-gradient(900px 500px at 12% 8%, #E9E4FF 0%, transparent 60%),radial-gradient(800px 450px at 92% 92%, #DDF0FF 0%, transparent 55%),#EFF0F6;}
+  .side{max-width:330px;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.9);border-radius:24px;padding:30px 28px;box-shadow:0 8px 20px -10px rgba(20,23,38,.10);}
+  .side-chip{display:inline-flex;align-items:center;gap:6px;background:#EFEBFE;color:#6C4DF6;font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;margin-bottom:16px;}
+  .side h1{font-size:30px;font-weight:600;line-height:1.5;margin-bottom:8px;}
+  .side h2{font-size:16px;font-weight:500;margin-bottom:14px;color:#7B8194;}
+  .side p{font-size:13.5px;color:#4A5063;margin-bottom:18px;}
+  .side ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  .side li{display:flex;align-items:center;gap:10px;font-size:13px;color:#3E4456;}
+  .side li svg{flex:none;color:#6C4DF6;}
+  .side-note{margin-top:20px;font-size:11.5px;color:#7B8194;background:#FAFBFD;border:1px dashed #ECEEF5;border-radius:12px;padding:10px 12px;}
+
+  .phone{width:413px;height:892px;flex:none;position:relative;background:#101218;border-radius:52px;padding:10px;box-shadow:0 48px 90px -30px rgba(35,40,70,.45),0 0 0 1px rgba(20,22,35,.06);}
+  .phone-inner{position:relative;width:100%;height:100%;overflow:hidden;background:#FEFEFE;border-radius:42px;display:flex;flex-direction:column;}
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:30px;background:#101218;border-radius:16px;z-index:60;}
+
+  .statusbar{height:50px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:12px;font-weight:600;color:#16161D;z-index:55;direction:rtl;}
+  .st-icons{display:flex;align-items:center;gap:5px;}
+
+  .appbar{flex:none;display:flex;align-items:center;justify-content:flex-start;gap:12px;background:#FEFEFE;height:52px;padding:6px 14px;direction:rtl;}
+  .back-btn{width:24px;height:24px;flex:none;display:grid;place-items:center;margin-right:auto;}
+  .back-btn img{width:24px;height:24px;}
+  .ab-icon{width:32px;height:32px;flex:none;display:grid;place-items:center;color:#202A37;}
+  .ab-icon img{width:32px;height:32px;}
+  .ab-title{flex:0 1 auto;display:flex;flex-direction:column;align-items:flex-start;text-align:right;min-width:0;margin-right:10px;}
+  .ab-title-t{font-size:16px;font-weight:700;color:#16161D;line-height:1.4;white-space:nowrap;}
+  .ab-title-s{font-size:11px;color:#737377;line-height:1.4;white-space:nowrap;}
+
+  .screens{flex:1;overflow-y:auto;padding:16px 16px 100px;scrollbar-width:none;}
+  .screens::-webkit-scrollbar{display:none;}
+
+  /* آیتم‌ها — مطابق فیگما */
+  .f-item{margin-bottom:18px;}
+  .f-label{font-size:13px;font-weight:600;color:#16161D;margin-bottom:6px;line-height:1.6;}
+  .f-input{width:100%;border:1px solid #ECEEF5;border-radius:12px;padding:12px 14px;font-size:13px;outline:none;background:#FAFAFA;color:#181B26;transition:.15s;}
+  .f-input:focus{border-color:#4B45E6;background:#fff;}
+  .f-input::placeholder{color:#A3A9B6;}
+  .f-help{font-size:11px;color:#737377;margin-top:4px;line-height:1.6;}
+  .f-row{display:flex;gap:10px;}
+  .f-row > div{flex:1;min-width:0;}
+
+  /* سوییچ */
+  .sw-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;}
+  .sw-text{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;}
+  .sw-name{font-size:13px;font-weight:600;color:#16161D;line-height:1.6;}
+  .sw-desc{font-size:11px;color:#737377;line-height:1.6;margin-top:1px;}
+  .switch{width:36px;height:20px;border-radius:99px;background:#C2C6CE;position:relative;flex:none;transition:.2s;cursor:pointer;}
+  .switch::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#FEFEFE;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+  .switch.on{background:#4B45E6;}
+  .switch.on::after{right:18px;}
+
+  /* ضبط صدا */
+  .voice-row{display:flex;align-items:center;gap:10px;background:#FAFAFA;border:1px solid #ECEEF5;border-radius:12px;padding:9px 14px;}
+  .voice-waves{flex:1;display:flex;align-items:center;gap:3px;height:26px;}
+  .voice-waves i{width:2px;background:#D9D9D9;border-radius:2px;display:inline-block;}
+  .voice-btn{width:24px;height:24px;flex:none;color:#16161D;display:grid;place-items:center;}
+  .voice-btn img{width:24px;height:24px;}
+
+  /* آپلود */
+  .up-area{border:1px solid #ECEEF5;border-radius:14px;background:#FEFEFE;padding:26px 14px;text-align:center;}
+  .up-ic{width:40px;height:40px;border-radius:12px;background:#EFEBFE;color:#4B45E6;display:grid;place-items:center;margin:0 auto 8px;}
+  .up-txt{font-size:13px;color:#4B45E6;font-weight:400;line-height:1.6;}
+  .up-note{font-size:11px;color:#16161D;margin-top:4px;line-height:1.6;}
+  .up-imgs{display:flex;gap:10px;margin-top:12px;}
+  .up-img{width:80px;height:80px;border-radius:12px;background:#FAFAFA;border:1px solid #ECEEF5;position:relative;display:grid;place-items:center;color:#16161D;}
+  .up-img .del{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:#FFD5D5;color:#C20000;display:grid;place-items:center;}
+  .up-img svg.big{width:24px;height:24px;}
+
+  /* ثبت */
+  .save-bar{position:absolute;bottom:0;left:0;right:0;background:#FEFEFE;padding:10px 16px;z-index:40;}
+  .save-btn{width:100%;background:#202A37;color:#FBFBFB;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:400;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;}
+  .save-btn:active{transform:scale(.98);}
+  .save-btn img{width:20px;height:20px;}
+
+  /* جداکننده */
+  .sep{height:1px;background:#ECEEF5;margin:16px 0;}
+
+  /* باکس‌بندی بخش‌ها — مثل نسخه قبلی (فرم ارزی) */
+  .form-card{background:#fff;border:1px solid #ECEEF5;border-radius:16px;padding:14px;margin-bottom:12px;}
+  .sec-title{font-size:13px;font-weight:600;color:#16161D;line-height:1.6;margin-bottom:8px;}
+  .sec-title::after{content:"";display:block;height:1px;background:#F1F2F7;margin-top:8px;}
+  .form-card .f-item{margin-bottom:0;}
+
+  /* زیرمجموعه توضیحات داخل کارت نام کالا */
+  .sub-item{margin-top:12px;padding-top:12px;border-top:1px dashed #E4E7EF;}
+  .sub-item .f-label{margin-bottom:6px;}
+
+
+  /* موجودی نامحدود */
+  .inv-wrap{margin-top:10px;}
+  .inv-wrap .f-label{margin:0 2px 6px;}
+  .unl-box{display:none;margin-top:10px;border:1px solid #D7F0E3;background:#F3FBF7;border-radius:12px;padding:10px 12px;font-size:12px;color:#0B7A48;text-align:center;line-height:1.7;}
+  /* سه حالت کد کالا */
+  .code-tabs{display:flex;background:#F1F2F7;border-radius:10px;padding:3px;gap:3px;margin-bottom:10px;}
+  .code-tab{flex:1;border:none;background:transparent;border-radius:8px;padding:8px 4px;font-size:12px;font-weight:500;color:#6B7180;transition:.15s;cursor:pointer;}
+  .code-tab.active{background:#fff;color:#4B45E6;box-shadow:0 2px 6px rgba(20,23,38,.08);}
+  .code-row{display:flex;gap:8px;align-items:center;}
+  .code-row .f-input{flex:1;min-width:0;}
+  .code-refresh{width:38px;height:38px;flex:none;border-radius:10px;background:#EFEBFE;color:#4B45E6;display:grid;place-items:center;transition:.15s;}
+  .code-refresh:active{transform:rotate(180deg);}
+
+  /* باکس درصد تخفیف */
+  .disc-box{display:none;margin-top:12px;border:1px solid #ECEEF5;background:#FAFBFD;border-radius:12px;padding:12px;}
+  .disc-inp{position:relative;}
+  .disc-inp .f-input{padding-left:36px;}
+  .disc-suffix{position:absolute;top:50%;left:13px;transform:translateY(-50%);font-size:13px;font-weight:600;color:#737377;pointer-events:none;}
+
+  /* کارت‌های نمایشی واحد فروش و ویژگی‌ها (ورودی نیستند) */
+  .unit-box,.feat-box{display:none;margin-top:12px;}
+  .disp-card{border:1px solid #ECEEF5;background:#FBFBFD;border-radius:12px;padding:12px;}
+  .disp-edit{width:26px;height:26px;border-radius:8px;background:#EFEBFE;color:#4B45E6;display:grid;place-items:center;flex:none;transition:.15s;}
+  .disp-edit:active{transform:scale(.94);}
+  .disp-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed #ECEEF5;}
+  .disp-row:first-child{padding-top:0;}
+  .disp-row:last-child{border-bottom:0;padding-bottom:0;}
+  .disp-row-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:#16161D;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .disp-row-count{flex:none;font-size:10.5px;color:#737377;background:#fff;border:1px solid #ECEEF5;border-radius:99px;padding:4px 10px;line-height:1.6;white-space:nowrap;}
+  /* چیپ قیمت افزودنی */
+  .disp-row-price{flex:none;font-size:10.5px;font-weight:600;color:#4B45E6;background:rgba(75,69,230,.07);border:1px solid #D8D3F8;border-radius:99px;padding:4px 10px;line-height:1.6;white-space:nowrap;}
+  /* دکمه افزودن (ویژگی‌ها / واحد فروش / افزودنی‌ها) */
+  .disp-add{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:10px;border:1px dashed #C9C4F5;background:rgba(75,69,230,.04);border-radius:12px;color:#4B45E6;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit;}
+  .disp-add:active{background:rgba(75,69,230,.10);transform:scale(.98);}
+
+  /* تکمیل توضیحات با AI */
+  .ai-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .ai-row .f-label{margin-bottom:0;}
+  .ai-btn{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#4B45E6;background:rgba(75,69,230,.07);border:1px solid #D8D3F8;border-radius:99px;padding:5px 10px;cursor:pointer;transition:.15s;font-family:inherit;white-space:nowrap;}
+  .ai-btn:active{transform:scale(.96);}
+  .ai-btn.loading{color:#7B8194;background:#F1F2F7;border-color:#ECEEF5;cursor:default;}
+  .ai-btn svg{flex:none;}
+  /* حذف پس زمینه — برای هر تصویر */
+  .wand-btn{position:absolute;bottom:6px;left:6px;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid #ECEEF5;color:#4B45E6;display:grid;place-items:center;z-index:3;box-shadow:0 2px 6px rgba(20,23,38,.14);transition:.15s;}
+  .wand-btn.loading{color:#7B8194;}
+  .wand-btn:active{transform:scale(.9);}
+  .up-area{position:relative;}
+  .up-area.bg-done{border-color:#B9E8CF;box-shadow:0 0 0 2px rgba(18,183,106,.22);background:#fff;}
+  .up-img.bg-done{background:#fff;border-color:#B9E8CF;box-shadow:0 0 0 2px rgba(18,183,106,.22);}
+  .up-img .bg-badge{display:none;}
+  .up-img.bg-done .bg-badge{display:grid;position:absolute;bottom:4px;left:4px;width:16px;height:16px;border-radius:50%;background:#12B76A;color:#fff;place-items:center;z-index:2;}
+  .up-img.bg-done .del{background:#E6F7EE;color:#0B7A48;}
+  .up-area .real-img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;}
+  @media (max-width:940px){.side{display:none;}}
+  @media (max-width:440px){
+    .stage{padding:0;display:block;}
+    .phone{width:100vw;height:100dvh;border-radius:0;padding:0;}
+    .phone-inner{border-radius:0;}
+    .island{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="side">
+    <span class="side-chip">پنل ادمین • فروشگاه‌ساز</span>
+    <h1>افزودن کالا</h1>
+    <h2>صفحه ثبت کالا — بازسازی از فیگما</h2>
+    <p>کالا مورد نیاز خودتان را اضافه کنید — بازسازی دقیق صفحه «Product - Add» از فیگما (Node 81:4342) با تمام اینپوت‌ها و تنظیمات.</p>
+    <ul>
+      <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>نام، توضیحات، کد و موجودی کالا</li>
+      <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>ضبط توضیحات صوتی (۱۵ ثانیه)</li>
+      <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>دسته‌بندی + ویژگی‌ها + استعلام قیمت</li>
+      <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>تخفیف + واحد فروش پیشرفته + تصاویر</li>
+    </ul>
+    <div class="side-note">کارت‌های نمایشی (بدون ورودی): واحد فروش = ردیف‌های (نام واحد، قیمت واحد، تعداد در واحد + آیکن ویرایش)؛ ویژگی‌ها و افزودنی‌ها = ردیف‌های (نام + تعداد آیتم + آیکن ویرایش). افزودنی‌ها برای هر کالا مجزا و متفاوت است — مثلاً پیتزا: سس اضافه؛ زیورآلات: جعبه فانتزی.</div>
+  </aside>
+
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="island"></div>
+
+      <div class="statusbar">
+        <span>۵:۱۳</span>
+        <span class="st-icons">
+          <svg width="15" height="11" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="1"/><rect x="9" y="3" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".4"/></svg>
+          <svg width="15" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.5 4.5a9.5 9.5 0 0 1 13 0"/><path d="M4 7a6 6 0 0 1 8 0"/><path d="M6.5 9.5a2.5 2.5 0 0 1 3 0"/></svg>
+          <svg width="22" height="11" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="19" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="13" height="8" rx="1.6" fill="currentColor"/><path d="M21.5 4v4a2 2 0 0 0 0-4z" fill="currentColor" opacity=".5"/></svg>
+        </span>
+      </div>
+
+      <header class="appbar">
+<span class="ab-icon"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xNi40NDMzIDIuMzQxMjlDMTUuMzkzNyAxLjYwNzA1IDE0LjA2OSAxLjM4NTMxIDEyLjgzNzYgMS43Mzc3NEw1LjMzMDYyIDMuODg2MjFDMy41MDY5OSA0LjQwODEyIDIuMjUgNi4wNzUzMiAyLjI1IDcuOTcyMTZWMTUuNzMyNkMyLjI1IDE3LjExOTkgMi45MjcwNSAxOC40MTk4IDQuMDYzNzUgMTkuMjE1TDcuNTU2NzQgMjEuNjU4N0M4LjYwNjI2IDIyLjM5MjkgOS45MzA5NSAyMi42MTQ3IDExLjE2MjQgMjIuMjYyM0wxNS41MTE0IDIxLjAxNzZDMTUuOTA5NiAyMC45MDM2IDE2LjE0MDEgMjAuNDg4NCAxNi4wMjYxIDIwLjA5MDJDMTUuOTEyMSAxOS42OTE5IDE1LjQ5NjkgMTkuNDYxNSAxNS4wOTg3IDE5LjU3NTVMMTAuNzQ5NiAyMC44MjAyQzEwLjU4NSAyMC44NjczIDEwLjQxNzcgMjAuODk4NSAxMC4yNSAyMC45MTQzVjEwLjIyQzEwLjQyMzMgMTAuMTk1MiAxMC41OTU4IDEwLjE1ODIgMTAuNzY2MiAxMC4xMDg3TDIwLjEwOCA3LjM5NDkyQzIwLjIwMDkgNy42NzI2NCAyMC4yNSA3Ljk2NjgzIDIwLjI1IDguMjY3MzVWMTQuNUMyMC4yNSAxNC45MTQyIDIwLjU4NTggMTUuMjUgMjEgMTUuMjVDMjEuNDE0MiAxNS4yNSAyMS43NSAxNC45MTQyIDIxLjc1IDE0LjVWOC4yNjczNUMyMS43NSA2Ljg4MDEgMjEuMDcyOSA1LjU4MDE2IDE5LjkzNjMgNC43ODQ5NEwxNi40NDMzIDIuMzQxMjlaTTguNzUgMTAuMTI5OUM4LjM1OTM1IDEwLjAyNTMgNy45ODQgOS44NTcxMiA3LjYzOTk1IDkuNjI3NzVMMy44ODM5MiA3LjEyMzczQzMuNzk2NjkgNy4zOTI1OCAzLjc1IDcuNjc4MTEgMy43NSA3Ljk3MjE2VjE1LjczMjZDMy43NSAxNi42MzAzIDQuMTg4MDkgMTcuNDcxNCA0LjkyMzYgMTcuOTg2TDguNDE2NTkgMjAuNDI5NkM4LjUyMzYyIDIwLjUwNDUgOC42MzUwNiAyMC41NzExIDguNzUgMjAuNjI5NFYxMC4xMjk5Wk04LjQ3MiA4LjM3OTY3TDQuNzE4MyA1Ljg3NzIxQzUuMDEwMjggNS42Mjg3MiA1LjM1NzE4IDUuNDM4ODMgNS43NDMzNCA1LjMyODMxTDEzLjI1MDMgMy4xNzk4NEMxNC4wNDcxIDIuOTUxOCAxNC45MDQzIDMuMDk1MjggMTUuNTgzNCAzLjU3MDM3TDE5LjA3NjQgNi4wMTQwM0MxOS4xMTU2IDYuMDQxNDggMTkuMTU0IDYuMDY5ODYgMTkuMTkxNSA2LjA5OTEzTDEwLjM0NzggOC42NjgyNEM5LjcxMDU0IDguODUzMzUgOS4wMjQxMSA4Ljc0Nzc1IDguNDcyIDguMzc5NjdaIiBmaWxsPSIjNzM3Mzc3Ii8+CjxwYXRoIGQ9Ik0xOC41IDEzLjc1QzE4LjkxNDIgMTMuNzUgMTkuMjUgMTQuMDg1OCAxOS4yNSAxNC41VjE2Ljc1SDIxLjVDMjEuOTE0MiAxNi43NSAyMi4yNSAxNy4wODU4IDIyLjI1IDE3LjVDMjIuMjUgMTcuOTE0MiAyMS45MTQyIDE4LjI1IDIxLjUgMTguMjVIMTkuMjVWMjAuNUMxOS4yNSAyMC45MTQyIDE4LjkxNDIgMjEuMjUgMTguNSAyMS4yNUMxOC4wODU4IDIxLjI1IDE3Ljc1IDIwLjkxNDIgMTcuNzUgMjAuNVYxOC4yNUgxNS41QzE1LjA4NTggMTguMjUgMTQuNzUgMTcuOTE0MiAxNC43NSAxNy41QzE0Ljc1IDE3LjA4NTggMTUuMDg1OCAxNi43NSAxNS41IDE2Ljc1SDE3Ljc1VjE0LjVDMTcuNzUgMTQuMDg1OCAxOC4wODU4IDEzLjc1IDE4LjUgMTMuNzVaIiBmaWxsPSIjNzM3Mzc3Ii8+Cjwvc3ZnPgo=" alt=""></span>
+<div class="ab-title">
+          <span class="ab-title-t">کالا</span>
+          <span class="ab-title-s">کالا مورد نیاز خودتان را اضافه کنید.</span>
+        </div>
+<button class="back-btn" id="back-btn" aria-label="بازگشت">
+          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTguNTE4MiA2LjQyNTIxQzguODM1NjUgNi4xNTkxNCA5LjMwODcgNi4yMDA4IDkuNTc0NzcgNi41MTgyNUM5Ljg0MDg0IDYuODM1NzEgOS43OTkxOCA3LjMwODc2IDkuNDgxNzIgNy41NzQ4M0w1LjA5NjczIDExLjI1SDIwQzIwLjQxNDIgMTEuMjUgMjAuNzUgMTEuNTg1OCAyMC43NSAxMkMyMC43NSAxMi40MTQyIDIwLjQxNDIgMTIuNzUgMjAgMTIuNzVINS4wOTgwM0w5LjQ4MTgxIDE2LjQyNTNDOS43OTkyMiAxNi42OTE0IDkuODQwODEgMTcuMTY0NCA5LjU3NDcgMTcuNDgxOUM5LjMwODU4IDE3Ljc5OTMgOC44MzU1MyAxNy44NDA5IDguNTE4MTEgMTcuNTc0OEw0LjEyNDggMTMuODkxNUMyLjk1ODQzIDEyLjkxMzggMi45NTgzNyAxMS4wODUxIDQuMTI0OCAxMC4xMDc0TDguNTE4MiA2LjQyNTIxWiIgZmlsbD0iIzE2MTYxRCIvPgo8L3N2Zz4K" alt="">
+        </button>
+</header>
+
+      <main class="screens">
+        <!-- وضعیت کالا -->
+        <div class="form-card">
+          <div class="sec-title">وضعیت کالا</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">کالا در فروشگاه نمایش داده نمیشود</span></div>
+            <span class="switch"></span>
+          </div>
+        </div>
+
+        <!-- نام کالا + توضیحات (زیرمجموعه) -->
+        <div class="form-card">
+          <div class="sec-title">نام کالا</div>
+          <input class="f-input" placeholder="پیتزا وگنو">
+          <div class="f-help">این یک متن راهنمایی برای کمک به کاربر است.</div>
+          <div class="sub-item">
+            <div class="ai-row">
+              <div class="f-label" style="margin-bottom:0;">توضیحات کالا</div>
+              <button class="ai-btn" id="ai-prd" type="button">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4.5 13.5h6L9 22l8.5-11.5h-6L13 2z"/></svg>
+                <span class="ai-txt">تکمیل با AI</span>
+              </button>
+            </div>
+            <input class="f-input" id="prd-desc" placeholder="انواع پیتزا های ایتالیایی">
+            <div class="f-help">این یک متن راهنمایی برای کمک به کاربر است.</div>
+          </div>
+        </div>
+
+        <!-- ضبط توضیحات -->
+        <div class="form-card">
+          <div class="sec-title">ضبط توضیحات</div>
+          <div class="voice-row">
+            <span class="voice-waves" id="waves"></span>
+            <span class="voice-btn"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iOSIgeT0iMiIgd2lkdGg9IjYiIGhlaWdodD0iMTIiIHJ4PSIzIi8+PHBhdGggZD0iTTUgMTB2MmE3IDcgMCAwIDAgMTQgMHYtMiIvPjxsaW5lIHgxPSIxMiIgeTE9IjE5IiB4Mj0iMTIiIHkyPSIyMiIvPjwvc3ZnPg==" alt=""></span>
+          </div>
+          <div class="f-help">حداکثر ویس ۱۵ ثانیه می باشد</div>
+        </div>
+
+        <!-- دسته بندی -->
+        <div class="form-card">
+          <div class="sec-title">دسته بندی</div>
+          <select class="f-input">
+            <option>پیتزا ایتالیایی</option>
+            <option>پیتزا آمریکایی</option>
+            <option>سایر</option>
+          </select>
+        </div>
+
+        <!-- ویژگی ها -->
+        <div class="form-card">
+          <div class="sec-title">ویژگی ها</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">فعاسازی ویژگی های کالا</span></div>
+            <span class="switch" data-target="feat-box"></span>
+          </div>
+          <div class="feat-box" id="feat-box">
+            <div class="disp-card">
+              <div class="disp-row">
+                <span class="disp-row-name">رنگ</span>
+                <span class="disp-row-count">۴ آیتم</span>
+                <button class="disp-edit" aria-label="ویرایش ویژگی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+              <div class="disp-row">
+                <span class="disp-row-name">اندازه</span>
+                <span class="disp-row-count">۳ آیتم</span>
+                <button class="disp-edit" aria-label="ویرایش ویژگی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="disp-add" data-msg="ویژگی جدید تعریف شد">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              افزودن ویژگی
+            </button>
+          </div>
+        </div>
+
+        <!-- افزودنی ها -->
+        <div class="form-card">
+          <div class="sec-title">افزودنی ها</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">افزودنی‌های قابل انتخاب برای این کالا</span></div>
+            <span class="switch" data-target="addon-box"></span>
+          </div>
+          <div class="feat-box" id="addon-box">
+            <div class="disp-card">
+              <div class="disp-row">
+                <span class="disp-row-name">سس اضافه</span>
+                <span class="disp-row-price">۱۵٬۰۰۰ تومان</span>
+                <button class="disp-edit" aria-label="ویرایش افزودنی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+              <div class="disp-row">
+                <span class="disp-row-name">پنیر اضافه</span>
+                <span class="disp-row-price">۲۵٬۰۰۰ تومان</span>
+                <button class="disp-edit" aria-label="ویرایش افزودنی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+              <div class="disp-row">
+                <span class="disp-row-name">جعبه فانتزی</span>
+                <span class="disp-row-price">۵۰٬۰۰۰ تومان</span>
+                <button class="disp-edit" aria-label="ویرایش افزودنی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+              <div class="disp-row">
+                <span class="disp-row-name">بسته‌بندی کادو</span>
+                <span class="disp-row-price">۳۰٬۰۰۰ تومان</span>
+                <button class="disp-edit" aria-label="ویرایش افزودنی">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="disp-add" data-msg="افزودنی جدید تعریف شد">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              افزودن افزودنی
+            </button>
+          </div>
+        </div>
+
+        <!-- کد کالا — سه حالت -->
+        <div class="form-card">
+          <div class="sec-title">کد کالا</div>
+          <div class="code-tabs">
+            <button type="button" class="code-tab active" data-mode="auto">کد خودکار</button>
+            <button type="button" class="code-tab" data-mode="manual">کد دستی</button>
+          </div>
+
+          <div class="code-pane" id="code-auto">
+            <div class="code-row">
+              <input class="f-input" id="code-auto-inp" readonly value="MC-۴۸۲۹۱۳۵۷" dir="ltr" style="text-align:right">
+              <button class="code-refresh" id="code-refresh" aria-label="تولید مجدد">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              </button>
+            </div>
+            <div class="f-help">کد به‌صورت خودکار توسط سیستم تولید می‌شود.</div>
+          </div>
+
+          <div class="code-pane" id="code-manual" style="display:none">
+            <input class="f-input" placeholder="کد کالا را وارد کنید">
+            <div class="f-help">کد دلخواه خود را وارد کنید.</div>
+          </div>
+        </div>
+
+        <!-- موجودی کالا -->
+        <div class="form-card">
+          <div class="sec-title">موجودی کالا</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-name">موجودی نامحدود</span><span class="sw-desc">بدون محدودیت در تعداد فروش</span></div>
+            <span class="switch" data-target="unl-kala" data-hide="inv-kala"></span>
+          </div>
+          <div class="inv-wrap" id="inv-kala">
+            <label class="f-label">موجودی</label>
+            <input class="f-input" placeholder="۳۰۰" dir="ltr" style="text-align:right">
+            <div class="f-help">این یک متن راهنمایی برای کمک به کاربر است.</div>
+          </div>
+          <div class="unl-box" id="unl-kala">این محصول بدون محدودیت موجودی است</div>
+        </div>
+
+        <!-- استعلام قیمت -->
+        <div class="form-card">
+          <div class="sec-title">استعلام قیمت</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">استعلام قیمت کاربر را به شماره شما هدایت می کند.</span></div>
+            <span class="switch"></span>
+          </div>
+        </div>
+
+        <!-- قیمت کالا -->
+        <div class="form-card">
+          <div class="sec-title">قیمت کالا</div>
+          <input class="f-input" placeholder="۳۰۰,۰۰۰" dir="ltr" style="text-align:right">
+          <div class="f-help">این یک متن راهنمایی برای کمک به کاربر است.</div>
+        </div>
+
+        <!-- تخفیف دارد؟ -->
+        <div class="form-card">
+          <div class="sec-title">تخفیف دارد؟</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">میتوانید برای این محصول تخفیف بگذارید.</span></div>
+            <span class="switch" data-target="disc-box"></span>
+          </div>
+          <div class="disc-box" id="disc-box">
+            <div class="f-label">درصد تخفیف</div>
+            <div class="disc-inp">
+              <input class="f-input" placeholder="مثلاً: ۱۰" style="text-align:right">
+              <span class="disc-suffix">٪</span>
+            </div>
+            <div class="f-help" style="margin-top:4px">مقدار تخفیف به درصد روی قیمت اعمال میشود.</div>
+          </div>
+        </div>
+
+        <!-- واحد فروش پیشرفته -->
+        <div class="form-card">
+          <div class="sec-title">واحد فروش پیشرفته</div>
+          <div class="sw-row" style="margin-bottom:0;">
+            <div class="sw-text"><span class="sw-desc">با فعالسازی واحد فروش پیشرفته ایجاد کنید.</span></div>
+            <span class="switch" data-target="unit-box"></span>
+          </div>
+          <div class="unit-box" id="unit-box">
+            <div class="disp-card">
+              <div class="disp-row">
+                <span class="disp-row-name">کیلوگرم</span>
+                <span class="disp-row-count">قیمت واحد: ۱٬۲۰۰٬۰۰۰</span>
+                <span class="disp-row-count">تعداد در واحد: ۱</span>
+                <button class="disp-edit" aria-label="ویرایش واحد">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+              <div class="disp-row">
+                <span class="disp-row-name">عدد</span>
+                <span class="disp-row-count">قیمت واحد: ۲۵۰٬۰۰۰</span>
+                <span class="disp-row-count">تعداد در واحد: ۱۰</span>
+                <button class="disp-edit" aria-label="ویرایش واحد">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="disp-add" data-msg="واحد فروش جدید تعریف شد">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              افزودن واحد
+            </button>
+          </div>
+        </div>
+
+        <!-- تصاویر کالا -->
+        <div class="form-card">
+          <div class="sec-title">تصاویر کالا</div>
+          <div class="up-area">
+            <div class="up-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="up-txt">برای آپلود فایل لطفا کلیک کنید</div>
+            <div class="up-note">SVG, PNG, JPG or GIF (max 400 x 400 px)</div>
+          </div>
+          <div class="up-imgs">
+            <div class="up-img"><span class="del"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span><span class="bg-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg class="big" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c2-3 4-4.5 6-4.5S14 9 16 12c2 3 4 4.5 6 4.5M6 8c0-1.5 1-2.5 2-2.5"/></svg></div>
+            <div class="up-img"><span class="del"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span><span class="bg-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg class="big" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c2-3 4-4.5 6-4.5S14 9 16 12c2 3 4 4.5 6 4.5M6 8c0-1.5 1-2.5 2-2.5"/></svg></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- ثبت کالا -->
+      <div class="save-bar">
+        <button class="save-btn" id="save-btn">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PGxpbmUgeDE9IjEyIiB5MT0iNSIgeDI9IjEyIiB5Mj0iMTkiLz48bGluZSB4MT0iNSIgeTE9IjEyIiB4Mj0iMTkiIHkyPSIxMiIvPjwvc3ZnPg==" alt="">
+          ثبت کالا
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toast(msg){
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#181B26;color:#fff;font-size:12px;padding:11px 18px;border-radius:13px;z-index:99;box-shadow:0 14px 30px -8px rgba(16,18,24,.5);transition:.3s;opacity:0;white-space:nowrap;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function(){ t.style.opacity = '1'; });
+    setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 400); }, 2200);
+  }
+
+  // سوییچ‌ها — سوییچ‌هایی که data-target دارند، باکس مربوطه را نشان/مخفی می‌کنند
+  document.querySelectorAll('.switch').forEach(function(s){
+    s.addEventListener('click', function(){
+      s.classList.toggle('on');
+      var on = s.classList.contains('on');
+      var t = s.getAttribute('data-target');
+      if (t) { var el = document.getElementById(t); if (el) el.style.display = on ? 'block' : 'none'; }
+      var h = s.getAttribute('data-hide');
+      if (h) { var el2 = document.getElementById(h); if (el2) el2.style.display = on ? 'none' : 'block'; }
+    });
+  });
+
+  // آیکن‌های ویرایش (کارت‌های نمایشی)
+  document.querySelectorAll('.disp-edit').forEach(function(b){
+    b.addEventListener('click', function(){ toast(b.getAttribute('aria-label') || 'ویرایش'); });
+  });
+
+  // دکمه‌های افزودن (ویژگی / واحد / افزودنی)
+  document.querySelectorAll('.disp-add').forEach(function(b){
+    b.addEventListener('click', function(){ toast(b.getAttribute('data-msg') || 'افزوده شد'); });
+  });
+
+  // سه حالت کد کالا
+  var codePanes = { auto: 'code-auto', manual: 'code-manual' };
+  document.querySelectorAll('.code-tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.code-tab').forEach(function(b){ b.classList.remove('active'); });
+      t.classList.add('active');
+      Object.keys(codePanes).forEach(function(k){
+        document.getElementById(codePanes[k]).style.display = (k === t.dataset.mode) ? '' : 'none';
+      });
+    });
+  });
+
+  // تولید مجدد کد خودکار
+  function faDigits(n){ return String(n).replace(/\d/g, function(d){ return '۰۱۲۳۴۵۶۷۸۹'[d]; }); }
+  function newCode(){
+    var code = 'MC-' + Math.floor(10000000 + Math.random() * 89999999);
+    document.getElementById('code-auto-inp').value = faDigits(code);
+  }
+  document.getElementById('code-refresh').addEventListener('click', function(){
+    newCode();
+    toast('کد جدید تولید شد ✓');
+  });
+
+
+  // موج‌های ضبط صدا
+  var waves = document.getElementById('waves');
+  var heights = [6,16,12,12,20,20,14,14,14,18,14,24,20,14,18,14,24,20,14,18,10,10,16,10,10,26,16,10,16,14,18,14,24,20,14,18,10,10,16,10,10];
+  waves.innerHTML = heights.map(function(h){ return '<i style="height:' + h + 'px"></i>'; }).join('');
+
+
+  // ===== تکمیل توضیحات با AI =====
+  function aiType(input, text, btn){
+    if (btn.classList.contains('loading')) return;
+    btn.classList.add('loading');
+    btn.querySelector('.ai-txt').textContent = 'در حال نوشتن…';
+    input.value = '';
+    var i = 0;
+    var timer = setInterval(function(){
+      i += 3;
+      input.value = text.slice(0, i);
+      if (i >= text.length) {
+        clearInterval(timer);
+        btn.classList.remove('loading');
+        btn.querySelector('.ai-txt').textContent = 'تکمیل با AI';
+        toast('توضیحات با هوش مصنوعی تکمیل شد ✓');
+      }
+    }, 15);
+  }
+
+  document.getElementById('ai-prd').addEventListener('click', function(){
+    aiType(
+      document.getElementById('prd-desc'),
+      'انواع پیتزاهای ایتالیایی با خمیر تازه و مواد اولیه درجه یک؛ ترکیبی از سبزیجات تازه، پنیر و سس مخصوص. قابل سفارش با افزودنی‌های سس و پنیر اضافه.',
+      this
+    );
+  });
+
+  // ===== آپلود واقعی تصویر =====
+  document.querySelectorAll('.up-area').forEach(function(area){
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.style.display = 'none';
+    area.appendChild(inp);
+    area.addEventListener('click', function(){ inp.click(); });
+    inp.addEventListener('change', function(){
+      if (!inp.files || !inp.files[0]) return;
+      var url = URL.createObjectURL(inp.files[0]);
+      var img = document.createElement('img');
+      img.className = 'real-img';
+      img.src = url;
+      area.innerHTML = '';
+      area.style.padding = '0';
+      area.appendChild(img);
+    });
+  });
+
+
+  // ===== حذف پس زمینه — برای هر تصویر جدا =====
+  function addWand(container){
+    var wand = document.createElement('button');
+    wand.type = 'button';
+    wand.className = 'wand-btn';
+    wand.setAttribute('aria-label', 'حذف پس زمینه تصویر');
+    wand.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>';
+    container.appendChild(wand);
+    wand.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      if (wand.classList.contains('loading')) return;
+      wand.classList.add('loading');
+      setTimeout(function(){
+        container.classList.add('bg-done');
+        wand.classList.remove('loading');
+        wand.style.display = 'none';
+        toast('پس زمینه تصویر حذف شد ✓');
+      }, 1000);
+    });
+  }
+  document.querySelectorAll('.up-img').forEach(addWand);
+
+  // ثبت
+  document.getElementById('save-btn').addEventListener('click', function(){ toast('کالا با موفقیت ثبت شد ✓'); });
+  document.getElementById('back-btn').addEventListener('click', function(){ window.location.href = 'manooch-dashboard.html'; });
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8d227490adc59',t:'MTc4NzQ3NDUxNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
